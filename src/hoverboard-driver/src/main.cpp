@@ -1,29 +1,32 @@
 #include "rclcpp/rclcpp.hpp"
+#include <hardware_interface/resource_manager.hpp>
 #include <controller_manager/controller_manager.hpp>
-#include <dynamic_reconfigure/server.h>
 #include "hoverboard.h"
 
 int main(int argc, char **argv) {
-    ros::init(argc, argv, "hoverboard_driver");
+    rclcpp::init(argc, argv);
+    auto node = rclcpp::Node::make_shared("hoverboard_driver");
 
     Hoverboard hoverboard;
-    controller_manager::ControllerManager cm(&hoverboard);
 
-    ros::AsyncSpinner spinner(1);
-    spinner.start();
+    auto executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
+    controller_manager::ControllerManager cm(
+        std::make_unique<hardware_interface::ResourceManager>(),
+        executor, "hoverboard_manager");
 
-    ros::Time prev_time = ros::Time::now();
-    ros::Rate rate(100.0);
+    rclcpp::Time prev_time = node->now();
+    rclcpp::Rate rate(100.0);
 
-    while (ros::ok()) {
-        const ros::Time time = ros::Time::now();
-        const ros::Duration period = time - prev_time;
+    while (rclcpp::ok()) {
+        const rclcpp::Time time = node->now();
+        const rclcpp::Duration period = time - prev_time;
         prev_time = time;
 
         hoverboard.read();
-        cm.update(time, period);
+        cm.update();
         hoverboard.write(time, period);
 
+        rclcpp::spin_some(node);
         rate.sleep();
     }
 
