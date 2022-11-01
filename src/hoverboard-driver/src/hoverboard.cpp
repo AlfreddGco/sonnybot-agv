@@ -174,10 +174,10 @@ void Hoverboard::protocol_recv (char byte) {
     prev_byte = byte;
 }
 
-void Hoverboard::write(const rclcpp::Time& time, const rclcpp::Duration& period) {
+hardware_interface::return_type Hoverboard::write(const rclcpp::Time& time, const rclcpp::Duration& period) {
     if (port_fd == -1) {
         RCLCPP_ERROR(node.get_logger(), "Attempt to write on closed serial");
-        return;
+        return hardware_interface::return_type::ERROR;
     }
     // Inform interested parties about the commands we've got
     cmd_pub[0]->publish(joints[0].cmd);
@@ -206,7 +206,9 @@ void Hoverboard::write(const rclcpp::Time& time, const rclcpp::Duration& period)
     int rc = ::write(port_fd, (const void*)&command, sizeof(command));
     if (rc < 0) {
         RCLCPP_ERROR(node.get_logger(), "Error writing to hoverboard serial port");
+	return hardware_interface::return_type::ERROR;
     }
+    return hardware_interface::return_type::OK;
 }
 
 void Hoverboard::on_encoder_update (int16_t right, int16_t left) {

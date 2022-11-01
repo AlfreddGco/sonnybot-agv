@@ -40,22 +40,19 @@ public:
         return "hoverboard_driver";
     }
 
-    hardware_interface::return_type read();
-    hardware_interface::return_type write(){
+    hardware_interface::return_type read(const rclcpp::Time& time, const rclcpp::Duration& period){
         return hardware_interface::return_type::OK;
     }
     hardware_interface::return_type update(){
         return hardware_interface::return_type::OK;
-    }
-    hardware_interface::status get_status() const {
-        return hardware_interface::status::UNKNOWN;
     }
     hardware_interface::return_type configure(
         const hardware_interface::HardwareInfo &system_info){
             return hardware_interface::return_type::OK;
     }
 
-    void write(const rclcpp::Time& time, const rclcpp::Duration& period);
+    hardware_interface::return_type read();
+    hardware_interface::return_type write(const rclcpp::Time& time, const rclcpp::Duration& period);
     void tick();
     std::vector<hardware_interface::StateInterface> export_state_interfaces();
     std::vector<hardware_interface::CommandInterface> export_command_interfaces();
