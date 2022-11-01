@@ -2,8 +2,7 @@
 #include "rclcpp/duration.hpp"
 #include <control_toolbox/pid.hpp>
 // Dynamic reconfigure
-#include <dynamic_reconfigure/server.h>
-#include "hoverboard_driver/HoverboardConfig.h"
+// #include "hoverboard_driver/HoverboardConfig.h"
 #include <boost/thread/mutex.hpp>
 
 class PID : public control_toolbox::Pid
@@ -36,7 +35,7 @@ class PID : public control_toolbox::Pid
          * @param out_min The min computed output.
          * @param out_max The max computed output.
          */
-        void init(ros::NodeHandle& nh, double f, double p, double i, double d, double i_max, double i_min, bool antiwindup, double out_max, double out_min);
+        void init(rclcpp::Node* node, double f, double p, double i, double d, double i_max, double i_min, bool antiwindup, double out_max, double out_min);
 
         /**
          * @brief Compute PID output value from error using process value, set point and time period
@@ -100,35 +99,10 @@ class PID : public control_toolbox::Pid
          */
         inline double getError() const { return error_; };
 
-        /**
-         * @brief Start the dynamic reconfigure node and load the default values
-         * @param node - a node handle where dynamic reconfigure services will be published
-         */
-        void initDynamicReconfig(ros::NodeHandle &node);
-
-        /**
-         * @brief Set Dynamic Reconfigure's gains to PID's values
-         */
-        void updateDynamicReconfig();
-        void updateDynamicReconfig(Gains gains_config);
-        void updateDynamicReconfig(hoverboard_driver::HoverboardConfig config);
-
-        /**
-         * \brief Update the PID parameters from dynamics reconfigure
-         */
-        void dynamicReconfigCallback(hoverboard_driver::HoverboardConfig &config, uint32_t /*level*/);
-
     private:
         double f_;
         double error_;
         double out_min_;
         double out_max_;
-
-        // Dynamic reconfigure
-        bool dynamic_reconfig_initialized_;
-        typedef dynamic_reconfigure::Server<hoverboard_driver::HoverboardConfig> DynamicReconfigServer;
-        boost::shared_ptr<DynamicReconfigServer> param_reconfig_server_;
-        DynamicReconfigServer::CallbackType param_reconfig_callback_;
-
-        boost::recursive_mutex param_reconfig_mutex_;
+        rclcpp::Node* node_;
 };
