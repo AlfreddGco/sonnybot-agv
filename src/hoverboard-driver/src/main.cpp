@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
         prev_time = time;
 
         hoverboard.read();
-        cm.update();
+        cm.update(time, period);
         hoverboard.write(time, period);
 
         rclcpp::spin_some(node);
