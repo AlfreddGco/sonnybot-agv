@@ -31,8 +31,8 @@ Hoverboard::Hoverboard() : node("hoverboard") {
     last_wheelcountR = last_wheelcountL = 0;
     multR = multL = 0;
 
-    rclcpp::Node node_left("pid/left");
-    rclcpp::Node node_right("pid/right");
+    rclcpp::Node node_left("pid_left");
+    rclcpp::Node node_right("pid_right");
     // Init PID controller
     pids[0].init(&node_left, 1.0, 0.0, 0.0, 0.01, 1.5, -1.5, true, max_velocity, -max_velocity);
     pids[0].setOutputLimits(-max_velocity, max_velocity);
