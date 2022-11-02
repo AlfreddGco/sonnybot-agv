@@ -40,6 +40,8 @@ include_directories(
  ${Boost_INCLUDE_DIRS}
 )
 
+install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
+
 add_executable(hoverboard_driver 
   src/hoverboard.cpp 
   src/pid.cpp
@@ -52,6 +54,7 @@ ament_target_dependencies(hoverboard_driver
   controller_manager
   hardware_interface
 )
+install(TARGETS hoverboard_driver DESTINATION lib/${PROJECT_NAME})
 
 #add_dependencies(hoverboard_driver ${PROJECT_NAME}_gencfg)
 
