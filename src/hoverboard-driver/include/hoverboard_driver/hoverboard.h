@@ -21,7 +21,7 @@
 constexpr double WHEEL_RADIUS = 0.08255;
 constexpr double MAX_VELOCITY = 1;
 constexpr int DIRECTION_CORRECTION = 1;
-constexpr char PORT[] = "/dev/ttyTHS1";
+constexpr char PORT[] = "/dev/ttyAMA0";
 
 class HoverboardAPI;
 
