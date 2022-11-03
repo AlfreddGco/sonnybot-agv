@@ -7,12 +7,13 @@ int main(int argc, char **argv) {
     rclcpp::init(argc, argv);
     auto node = rclcpp::Node::make_shared("hoverboard_driver");
 
-    Hoverboard hoverboard;
+    auto hoverboard = std::make_unique<Hoverboard>();
+    auto rm = std::make_unique<hardware_interface::ResourceManager>();
+    rm->import_component(std::move(hoverboard));
 
     auto executor = std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
     controller_manager::ControllerManager cm(
-        std::make_unique<hardware_interface::ResourceManager>(),
-        executor, "hoverboard_manager");
+        std::move(rm), executor, "hoverboard_manager");
 
     rclcpp::Time prev_time = node->now();
     rclcpp::Rate rate(100.0);
