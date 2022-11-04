@@ -10,6 +10,7 @@
 #include <termios.h>
 
 Hoverboard::Hoverboard() : node("hoverboard") {
+    last_read = node.now();
     // These publishers are only for debugging purposes
     vel_pub[0]    = node.create_publisher<std_msgs::msg::Float64>("hoverboard/left_wheel/velocity", 3);
     vel_pub[1]    = node.create_publisher<std_msgs::msg::Float64>("hoverboard/right_wheel/velocity", 3);
@@ -84,6 +85,7 @@ std::vector<hardware_interface::CommandInterface> Hoverboard::export_command_int
 }
 
 hardware_interface::return_type Hoverboard::read() {
+    RCLCPP_INFO(node.get_logger(), "Reading port %s | %d", port.c_str(), port_fd);
     if (port_fd != -1) {
         unsigned char c;
         int i = 0, r = 0;
@@ -92,14 +94,15 @@ hardware_interface::return_type Hoverboard::read() {
             protocol_recv(c);
         }
 
-        if (i > 0){
-            last_read = node.now();
-        }
-
         if (r < 0 && errno != EAGAIN){
             RCLCPP_ERROR(
                 node.get_logger(),
                 "Reading from serial %s failed: %d", port.c_str(), r);
+        }
+
+        if (i > 0){
+            last_read = node.now();
+            RCLCPP_INFO(node.get_logger(), "Read %d characters %s", i);
         }
     }
 
@@ -136,6 +139,8 @@ void Hoverboard::protocol_recv (char byte) {
     }
 
     if (msg_len == sizeof(SerialFeedback)) {
+        RCLCPP_INFO(node.get_logger(),
+            "Message hit length of: %d", sizeof(SerialFeedback));
         uint16_t checksum = (uint16_t)(
             msg.start ^
             msg.cmd1 ^
@@ -163,6 +168,9 @@ void Hoverboard::protocol_recv (char byte) {
             vel_pub[0]->publish(joints[0].vel);
             vel_pub[1]->publish(joints[1].vel);
 
+
+            RCLCPP_INFO(node.get_logger(),
+                "Checksum is right.");
             // Process encoder values and update odometry
             on_encoder_update (msg.wheelR_cnt, msg.wheelL_cnt);
         } else {
@@ -174,18 +182,19 @@ void Hoverboard::protocol_recv (char byte) {
     prev_byte = byte;
 }
 
-void Hoverboard::write(const rclcpp::Time& time, const rclcpp::Duration& period) {
+hardware_interface::return_type Hoverboard::write() {
+    RCLCPP_INFO(node.get_logger(), "Writing port %s", port.c_str());
     if (port_fd == -1) {
         RCLCPP_ERROR(node.get_logger(), "Attempt to write on closed serial");
-        return;
+        return hardware_interface::return_type::ERROR;
     }
     // Inform interested parties about the commands we've got
     cmd_pub[0]->publish(joints[0].cmd);
     cmd_pub[1]->publish(joints[1].cmd);
 
     double pid_outputs[2];
-    pid_outputs[0] = pids[0](joints[0].vel.data, joints[0].cmd.data, period);
-    pid_outputs[1] = pids[1](joints[1].vel.data, joints[1].cmd.data, period);
+    pid_outputs[0] = pids[0](joints[0].vel.data, joints[0].cmd.data, rclcpp::Duration(1, 0));
+    pid_outputs[1] = pids[1](joints[1].vel.data, joints[1].cmd.data, rclcpp::Duration(1, 0));
 
     // Convert PID outputs in RAD/S to RPM
     double set_speed[2] = {
@@ -206,7 +215,9 @@ void Hoverboard::write(const rclcpp::Time& time, const rclcpp::Duration& period)
     int rc = ::write(port_fd, (const void*)&command, sizeof(command));
     if (rc < 0) {
         RCLCPP_ERROR(node.get_logger(), "Error writing to hoverboard serial port");
+        return hardware_interface::return_type::ERROR;
     }
+    return hardware_interface::return_type::OK;
 }
 
 void Hoverboard::on_encoder_update (int16_t right, int16_t left) {

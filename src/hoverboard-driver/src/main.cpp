@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
         std::move(rm), executor, "hoverboard_manager");
 
     rclcpp::Time prev_time = node->now();
-    rclcpp::Rate rate(100.0);
+    rclcpp::Rate rate(1.0);
 
     while (rclcpp::ok()) {
         const rclcpp::Time time = node->now();
@@ -31,5 +31,6 @@ int main(int argc, char **argv) {
         rate.sleep();
     }
 
+    RCLCPP_INFO(node->get_logger(), "While loop finished.");
     return 0;
 }

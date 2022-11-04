@@ -31,9 +31,9 @@ double PID::operator()(const double &measured_value, const double &setpoint, con
 {
     // Compute error terms
     error_ = setpoint - measured_value;
-    rclcpp::Clock clock; // NOTA: Puede mamar
-    RCLCPP_DEBUG_STREAM_THROTTLE(
-        node_->get_logger(), clock, 1000000000, "Error: " << error_);
+    // rclcpp::Clock clock; // NOTA: Puede mamar
+    // RCLCPP_DEBUG_STREAM_THROTTLE(
+    //     node_->get_logger(), clock, 1000000000, "Error: " << error_);
 
     // Reset the i_error in case the p_error and the setpoint is zero
     // Otherwise there will always be a constant i_error_ that won't vanish
@@ -50,8 +50,8 @@ double PID::operator()(const double &measured_value, const double &setpoint, con
 
     // Use control_toolbox::Pid::computeCommand()
     double output = computeCommand(error_, dt.nanoseconds());
-    RCLCPP_DEBUG_STREAM_THROTTLE(node_->get_logger(), clock, dt.nanoseconds(),
-        "PID computed command: " << output);
+    // RCLCPP_DEBUG_STREAM_THROTTLE(node_->get_logger(), clock, dt.nanoseconds(),
+    //     "PID computed command: " << output);
 
     // Compute final output including feed forward term
     output = f_ * setpoint + output;

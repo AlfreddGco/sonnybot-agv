@@ -21,7 +21,7 @@
 constexpr double WHEEL_RADIUS = 0.08255;
 constexpr double MAX_VELOCITY = 1;
 constexpr int DIRECTION_CORRECTION = 1;
-constexpr char PORT[] = "/dev/ttyAMA0";
+constexpr char PORT[] = "/dev/pts/2";
 
 class HoverboardAPI;
 
@@ -41,9 +41,7 @@ public:
     }
 
     hardware_interface::return_type read();
-    hardware_interface::return_type write(){
-        return hardware_interface::return_type::OK;
-    }
+    hardware_interface::return_type write();
     hardware_interface::return_type update(){
         return hardware_interface::return_type::OK;
     }
