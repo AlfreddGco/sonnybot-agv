@@ -1,11 +1,16 @@
 <launch>
 	<!-- Include this in your launch file to change port -->
 	<!-- <param name="port" type="str" value="/dev/ttyTHS1"/> -->
-	<node name="hoverboard_driver" pkg="hoverboard_driver" exec="hoverboard_driver" output="screen"/>
-	<node name="controller_spawner" pkg="controller_manager" exec="spawner" respawn="false" output="screen"
-		args="hoverboard_joint_publisher hoverboard_velocity_controller"
+	<!-- Currently only launches controllers -->
+	<!-- <node name="hoverboard_driver" pkg="hoverboard_driver" exec="hoverboard_driver" output="screen"/> -->
+	<node name="controller_spawner_cmd" pkg="controller_manager" exec="spawner.py"
+		respawn="false" output="screen"
+		args="hoverboard_velocity_controller -c hoverboard_manager -t diff_drive_controller/DiffDriveController -p $(find-pkg-prefix hoverboard_driver)/config/controllers.yaml --controller-manager-timeout 30"
 	>
-		<param from="$(find-pkg-prefix hoverboard_driver)/config/hardware.yaml" />
-		<param from="$(find-pkg-prefix hoverboard_driver)/config/controllers.yaml" />
+	</node>
+	<node name="controller_spawner_state" pkg="controller_manager" exec="spawner.py"
+		respawn="false" output="screen"
+		args="hoverboard_joint_publisher -c hoverboard_manager -t joint_state_controller/JointStateController -p $(find-pkg-prefix hoverboard_driver)/config/controllers.yaml --controller-manager-timeout 30"
+	>
 	</node>
 </launch>
