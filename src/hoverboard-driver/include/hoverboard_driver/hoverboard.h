@@ -2,6 +2,7 @@
 #define HOVERBOARD_H_
 
 #include "rclcpp/rclcpp.hpp"
+#include "rclcpp/macros.hpp"
 #include <controller_manager/controller_manager.hpp>
 #include <hardware_interface/system_interface.hpp>
 #include <hardware_interface/handle.hpp>
@@ -27,12 +28,14 @@ class HoverboardAPI;
 
 class Hoverboard : public hardware_interface::SystemInterface {
 public:
+    RCLCPP_SHARED_PTR_DEFINITIONS(Hoverboard)
+
     Hoverboard();
     ~Hoverboard();
     
-    hardware_interface::return_type start() {
-        return hardware_interface::return_type::OK;
-    }
+    // TODO: implement
+    hardware_interface::return_type start();
+
     hardware_interface::return_type stop() {
         return hardware_interface::return_type::OK;
     }
@@ -45,18 +48,20 @@ public:
     hardware_interface::return_type update(){
         return hardware_interface::return_type::OK;
     }
+
+    // TODO: implement
     hardware_interface::status get_status() const {
         return hardware_interface::status::UNKNOWN;
     }
-    hardware_interface::return_type configure(
-        const hardware_interface::HardwareInfo &system_info){
-            return hardware_interface::return_type::OK;
-    }
 
-    void write(const rclcpp::Time& time, const rclcpp::Duration& period);
-    void tick();
+    // TODO: implement
+    hardware_interface::return_type configure(
+        const hardware_interface::HardwareInfo &system_info);
+
     std::vector<hardware_interface::StateInterface> export_state_interfaces();
     std::vector<hardware_interface::CommandInterface> export_command_interfaces();
+
+    void tick();
  private:
     void protocol_recv (char c);
     void on_encoder_update (int16_t right, int16_t left);

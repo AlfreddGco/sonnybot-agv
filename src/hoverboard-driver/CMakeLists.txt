@@ -40,12 +40,29 @@ add_executable(hoverboard_driver
 target_link_libraries(hoverboard_driver ${Boost_LIBRARIES})
 ament_target_dependencies(hoverboard_driver
   rclcpp
+  pluginlib
   control_toolbox
   controller_manager
   hardware_interface
 )
+pluginlib_export_plugin_description_file(hardware_interface config/hardware.yaml)
+
 install(TARGETS hoverboard_driver DESTINATION lib/${PROJECT_NAME})
 
-#add_dependencies(hoverboard_driver ${PROJECT_NAME}_gencfg)
+## EXPORTS
+ament_export_include_directories(
+  include
+)
+ament_export_libraries(
+  ${PROJECT_NAME}
+  ros2_controllers
+)
+ament_export_dependencies(
+  rclcpp
+  pluginlib
+  control_toolbox
+  controller_manager
+  hardware_interface
+)
 
 ament_package()

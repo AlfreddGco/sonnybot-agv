@@ -62,30 +62,41 @@ Hoverboard::~Hoverboard() {
         close(port_fd);
 }
 
+hardware_interface::return_type Hoverboard::configure(
+        const hardware_interface::HardwareInfo &system_info){
+    RCLCPP_INFO(node.get_logger(), "Hardware 'hoverboard' (SystemInterface) being configured");
+    return hardware_interface::return_type::OK;
+}
+
+hardware_interface::return_type Hoverboard::start(){
+    return hardware_interface::return_type::OK;
+}
+
 std::vector<hardware_interface::StateInterface> Hoverboard::export_state_interfaces() {
     std::vector<hardware_interface::StateInterface> state_interfaces;
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-        "left_wheel_pos", hardware_interface::HW_IF_POSITION, &joints[0].pos.data));
+        "left_wheels", hardware_interface::HW_IF_POSITION, &joints[0].pos.data));
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-        "left_wheel_vel", hardware_interface::HW_IF_VELOCITY, &joints[0].vel.data));
+        "left_wheels", hardware_interface::HW_IF_VELOCITY, &joints[0].vel.data));
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-        "right_wheel_pos", hardware_interface::HW_IF_POSITION, &joints[1].pos.data));
+        "right_wheels", hardware_interface::HW_IF_POSITION, &joints[1].pos.data));
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-        "right_wheel_vel", hardware_interface::HW_IF_VELOCITY, &joints[1].vel.data));
+        "right_wheels", hardware_interface::HW_IF_VELOCITY, &joints[1].vel.data));
     return state_interfaces;
 }
 
 std::vector<hardware_interface::CommandInterface> Hoverboard::export_command_interfaces() {
     std::vector<hardware_interface::CommandInterface> command_interfaces;
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        "left_wheel_vel", hardware_interface::HW_IF_VELOCITY, &joints[0].cmd.data));
+        "left_wheels", hardware_interface::HW_IF_VELOCITY, &joints[0].cmd.data));
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        "right_wheel_vel", hardware_interface::HW_IF_VELOCITY, &joints[1].cmd.data));
+        "right_wheels", hardware_interface::HW_IF_VELOCITY, &joints[1].cmd.data));
     return command_interfaces;
 }
 
 hardware_interface::return_type Hoverboard::read() {
-    RCLCPP_INFO(node.get_logger(), "Reading port %s | %d", port.c_str(), port_fd);
+    // TODO: Throttle log
+    // RCLCPP_INFO(node.get_logger(), "Reading port %s | %d", port.c_str(), port_fd);
     if (port_fd != -1) {
         unsigned char c;
         int i = 0, r = 0;
@@ -102,7 +113,6 @@ hardware_interface::return_type Hoverboard::read() {
 
         if (i > 0){
             last_read = node.now();
-            RCLCPP_INFO(node.get_logger(), "Read %d characters %s", i);
         }
     }
 
@@ -139,8 +149,6 @@ void Hoverboard::protocol_recv (char byte) {
     }
 
     if (msg_len == sizeof(SerialFeedback)) {
-        RCLCPP_INFO(node.get_logger(),
-            "Message hit length of: %d", sizeof(SerialFeedback));
         uint16_t checksum = (uint16_t)(
             msg.start ^
             msg.cmd1 ^
@@ -168,9 +176,6 @@ void Hoverboard::protocol_recv (char byte) {
             vel_pub[0]->publish(joints[0].vel);
             vel_pub[1]->publish(joints[1].vel);
 
-
-            RCLCPP_INFO(node.get_logger(),
-                "Checksum is right.");
             // Process encoder values and update odometry
             on_encoder_update (msg.wheelR_cnt, msg.wheelL_cnt);
         } else {
@@ -183,7 +188,8 @@ void Hoverboard::protocol_recv (char byte) {
 }
 
 hardware_interface::return_type Hoverboard::write() {
-    RCLCPP_INFO(node.get_logger(), "Writing port %s", port.c_str());
+    // TODO: Throttle log
+    // RCLCPP_INFO(node.get_logger(), "Writing port %s", port.c_str());
     if (port_fd == -1) {
         RCLCPP_ERROR(node.get_logger(), "Attempt to write on closed serial");
         return hardware_interface::return_type::ERROR;
@@ -193,8 +199,8 @@ hardware_interface::return_type Hoverboard::write() {
     cmd_pub[1]->publish(joints[1].cmd);
 
     double pid_outputs[2];
-    pid_outputs[0] = pids[0](joints[0].vel.data, joints[0].cmd.data, rclcpp::Duration(1, 0));
-    pid_outputs[1] = pids[1](joints[1].vel.data, joints[1].cmd.data, rclcpp::Duration(1, 0));
+    pid_outputs[0] = pids[0](joints[0].vel.data, joints[0].cmd.data, rclcpp::Duration(20000000));
+    pid_outputs[1] = pids[1](joints[1].vel.data, joints[1].cmd.data, rclcpp::Duration(20000000));
 
     // Convert PID outputs in RAD/S to RPM
     double set_speed[2] = {
@@ -275,3 +281,8 @@ void Hoverboard::on_encoder_update (int16_t right, int16_t left) {
     pos_pub[0]->publish(joints[0].pos);
     pos_pub[1]->publish(joints[1].pos);
 }
+
+#include "pluginlib/class_list_macros.hpp"
+
+PLUGINLIB_EXPORT_CLASS(
+    Hoverboard, hardware_interface::SystemInterface)
