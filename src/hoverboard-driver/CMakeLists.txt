@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.3)
 project(hoverboard_driver)
 
 set(CMAKE_CXX_COMPILER "/usr/bin/g++")
-set(CMAKE_CXX_STANDARD 14)
 
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
@@ -10,8 +9,6 @@ endif()
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
-
-# add_compile_options(-std=c++11)
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -26,14 +23,6 @@ find_package(control_toolbox REQUIRED)
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
 
-#generate_dynamic_reconfigure_options(
-#  config/Hoverboard.cfg
-#)
-
-#catkin_package(
-#  INCLUDE_DIRS include
-#)
-
 include_directories(
  include
  include/hoverboard_driver
@@ -41,6 +30,7 @@ include_directories(
 )
 
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
+install(DIRECTORY config)
 
 add_executable(hoverboard_driver 
   src/hoverboard.cpp 
